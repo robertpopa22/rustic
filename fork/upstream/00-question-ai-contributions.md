@@ -15,9 +15,15 @@ a shared repository, tested with stock restic 0.19.1) and have a first small cha
 ready: `--exclude-caches` and `--exclude-if-present FILE:HEADER`, keeping the tagged
 directory and tag file in the snapshot as restic does.
 
-Our work is prepared with AI assistance (analysis, code drafts, tests). A person reviews
-it, builds it, runs the tests, and is responsible for everything we submit. Before we
-open anything:
+To be upfront about how we work: an AI model drafts the analysis, the code and the
+tests. Each change is then reviewed independently by at least two models from other
+vendors (counter-opinions), and every finding is either fixed or answered with a reason.
+The change is tested on the full suite and against stock restic on a shared repository
+in both directions. A person approves it and is responsible for anything we submit. The
+whole process is written down here:
+https://github.com/robertpopa22/rustic/blob/main/fork/HOW-WE-WORK.md
+
+Before we open anything:
 
 1. Do you accept AI-assisted pull requests? If so, are there conditions, such as
    disclosure in the PR, size limits or a discussion first?

@@ -27,6 +27,9 @@ direction, without surprises.
 |---|---|
 | [PARITY.md](PARITY.md) | command-by-command, flag-by-flag map of restic 0.19.1 against rustic, with how each line was verified |
 | [ROADMAP.md](ROADMAP.md) | the ordered list of gaps to close, with size and the test that proves parity |
+| [HOW-WE-WORK.md](HOW-WE-WORK.md) | who does what (AI and people), and the counter-opinion process: every change reviewed by models from other vendors |
+| [reviews/](reviews/) | the counter-opinions on each change and what was done with every finding |
+| [radar/](radar/) | what other forks carry that upstream does not |
 | [TRIAGE.md](TRIAGE.md) | how incoming issues and pull requests are read and analysed (AI-assisted, human-approved) |
 | [DESIGN-lowlevel-write-api.md](DESIGN-lowlevel-write-api.md) | proposal for a public low-level write API in `rustic_core` |
 | [tests/cross-compat.ps1](tests/cross-compat.ps1) | round-trip test: restic writes / rustic reads and the reverse |

@@ -42,12 +42,16 @@ docs. Estimated 70 % of the map is verified by running; the rest is marked D or 
 | Item | restic | rustic | St |
 |---|---|---|---|
 | Creates lock files in `locks/` | yes, for every operation | never (`rustic_core` has no lock code) | ≠ |
-| Honours locks of other clients | yes; `prune` with a backup running exits 11 | no; `rustic prune` ran while a restic backup held a lock (R) | ≠ |
+| Honours locks of other clients | yes; `prune` with a backup running exits 11 | upstream: no, `rustic prune` ran while a restic backup held a lock (R). **Fork: prune, forget, key remove, repair index/snapshots and config refuse while restic holds a lock (R)**; `--ignore-restic-locks` overrides | **+** partly |
 | `unlock` | yes | no command (lock-free design) | – |
 | `--no-lock`, `--retry-lock` | yes | n/a | ≠ |
 | Two-phase prune (safe concurrent prune) | no | yes | + rustic |
 
-Consequence: mixing the two tools on one repository is safe for reads and for
+Still open in the fork: rustic writes no lock, so restic cannot see rustic, and a rustic
+backup can run while `restic prune` holds an exclusive lock (see
+[reviews/parity-restic-locks.md](reviews/parity-restic-locks.md)).
+
+Consequence upstream: mixing the two tools on one repository is safe for reads and for
 sequential use (section 1), but **a rustic prune can run while restic writes**. restic
 assumes nobody prunes while it holds a lock. Parity needs rustic to at least *read*
 restic locks and refuse (or wait) before exclusive operations, and ideally write its own.
@@ -104,7 +108,6 @@ Host/path/tag filters are global in rustic (`--filter-host`, `--filter-paths`,
 |---|---|---|
 | `--exclude-caches` | `--exclude-caches` | **+** (closed in fork, R) |
 | `--exclude-if-present FILE[:HEADER]`, keeps dir and tag file | was: whole dir dropped, no header | **+** (closed in fork, R) |
-| `--files-from`, `--files-from-raw`, `--files-from-verbatim` | – | – |
 | `--exclude`, `--iexclude`, `--exclude-file` | `--glob '!x'`, `--iglob`, `--glob-file` | ≠ syntax |
 | `--read-concurrency` | – (fixed) | – |
 | `--use-fs-snapshot` (VSS on Windows) | – | – |
@@ -112,7 +115,9 @@ Host/path/tag filters are global in rustic (`--filter-host`, `--filter-paths`,
 | `--with-atime` | `--set-atime` | ≠ |
 | `--stdin`, `--stdin-from-command` | `-` as source, `--stdin-command` | ≠ syntax |
 | `--group-by` | global `--group-by` | = |
-| Path stored for a Windows 8.3 short path | restic stores the long name; rustic stores the path as typed (`PROGRA~1` style) | ≠ (R) |
+| Path stored for a Windows 8.3 short path (`PROGRA~1` style) | restic stores the path as typed; rustic stores the long name | ≠ (R) |
+| Backup source that is an empty directory (or empty after exclusions) | restic keeps it | rustic omits it; upstream PR rustic_core#574 open | ≠ (R) |
+| `--files-from`, `--files-from-verbatim`, `--files-from-raw` | | | **+** (closed in fork, R) |
 
 ## 6. Backends (C, D)
 
