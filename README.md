@@ -1,3 +1,11 @@
+> **Geseidl fork of rustic: the goal is parity with restic.**
+> Everything restic does, rustic should do too, on the same repository.
+> This fork stays a GitHub fork of [rustic-rs/rustic](https://github.com/rustic-rs/rustic)
+> (with [robertpopa22/rustic_core](https://github.com/robertpopa22/rustic_core) for the
+> library) so that every change can go back upstream as a pull request.
+> Start with [fork/README.md](fork/README.md): the parity map, the roadmap, the tests
+> and how incoming issues and pull requests are triaged.
+> The upstream README follows unchanged.
 <p align="center">
 <img src="https://raw.githubusercontent.com/rustic-rs/assets/main/logos/readme_header.png" height="400" />
 </p>

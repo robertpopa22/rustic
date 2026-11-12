@@ -1,0 +1,46 @@
+PASS  init           restic init (v2) 
+PASS  write          restic backup 
+PASS  read           rustic snapshots 
+PASS  read           rustic check --read-data 
+PASS  read           rustic restore 
+PASS  read           rustic restore content 
+PASS  read           rustic ls 
+PASS  read           rustic find 
+PASS  read           rustic dump file 
+PASS  write          rustic backup into restic repo 
+PASS  write          restic check after rustic backup 
+PASS  write          rustic forget --keep-last 1 --prune 
+PASS  write          restic check after rustic prune 
+PASS  write          restic snapshots after rustic prune 
+PASS  init           rustic init 
+PASS  write          rustic backup 
+PASS  read           restic snapshots 
+PASS  read           restic check --read-data 
+PASS  read           restic restore 
+PASS  read           restic restore content 
+PASS  write          restic backup into rustic repo 
+PASS  write          restic forget --prune 
+PASS  write          rustic check after restic prune 
+PASS  key            restic key add 
+PASS  key            rustic opens with restic-added key 
+PASS  key            rustic key add 
+PASS  key            restic opens with rustic-added key 
+PASS  key            restic key list on rustic repo 
+PASS  key            rustic key list on restic repo 
+PASS  copy           restic init --copy-chunker-params 
+PASS  copy           rustic copy into restic-made repo 
+PASS  copy           restic check of copy target 
+DIFF  lock           rustic list locks 
+INFO  lock           rustic creates lock files locks before=0 after=0
+PASS  json           rustic snapshots --json 
+PASS  json           rustic ls latest --json 
+PASS  json           rustic find --glob *a.txt --json 
+PASS  json           rustic repoinfo --json 
+PASS  json           rustic key list --json 
+DIFF  mount          rustic mount on this OS error: unrecognized subcommand 'mount'
+PASS  format         restic init --repository-version 1 
+PASS  format         rustic backup into v1 
+PASS  format         restic check v1 after rustic 
+DIFF: 2
+INFO: 1
+PASS: 40
