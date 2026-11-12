@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{collections::BTreeMap, env};
 
 use crate::commands::ls::LsCmd;
@@ -57,6 +57,28 @@ pub struct BackupCmd {
     #[merge(skip)]
     #[serde(skip)]
     cli_name: Vec<String>,
+
+    /// Read backup sources from a file, one per line ("-" for stdin). Leading and trailing
+    /// whitespace is removed, empty lines and lines starting with '#' are ignored and glob
+    /// patterns are expanded (can be specified multiple times)
+    #[clap(long, value_name = "FILE", value_hint = ValueHint::FilePath, conflicts_with = "cli_name")]
+    #[merge(skip)]
+    #[serde(skip)]
+    files_from: Vec<PathBuf>,
+
+    /// Read backup sources from a file, one per line, taken literally: no comments, no
+    /// globbing, no whitespace removal ("-" for stdin; can be specified multiple times)
+    #[clap(long, value_name = "FILE", value_hint = ValueHint::FilePath, conflicts_with = "cli_name")]
+    #[merge(skip)]
+    #[serde(skip)]
+    files_from_verbatim: Vec<PathBuf>,
+
+    /// Read backup sources from a file, separated by NUL bytes, taken literally
+    /// ("-" for stdin; can be specified multiple times)
+    #[clap(long, value_name = "FILE", value_hint = ValueHint::FilePath, conflicts_with = "cli_name")]
+    #[merge(skip)]
+    #[serde(skip)]
+    files_from_raw: Vec<PathBuf>,
 
     /// Don't run the backup, but only list files which would be backup'ed.
     #[clap(long)]
@@ -281,8 +303,9 @@ impl BackupCmd {
             .iter()
             .map(|opt| (opt.clone(), PathList::from_iter(&opt.sources)));
 
-        if !self.cli_sources.is_empty() {
-            let sources = PathList::from_iter(&self.cli_sources);
+        let cli_sources = self.sources_with_files_from()?;
+        if !cli_sources.is_empty() {
+            let sources = PathList::from_iter(&cli_sources);
             let mut opts = self.clone();
             // merge Options from config file, if given
             if let Some((config_opts, _)) = config_snapshots.find(|(_, s)| s == &sources) {
@@ -312,6 +335,45 @@ impl BackupCmd {
         Ok(config_snapshots)
     }
 
+    /// Positional sources plus those given by `--files-from`, `--files-from-verbatim` and
+    /// `--files-from-raw`, with restic's rules: listed names come first, then positional
+    /// ones; names that do not exist are skipped with a warning.
+    fn sources_with_files_from(&self) -> Result<Vec<String>> {
+        if self.files_from.is_empty()
+            && self.files_from_verbatim.is_empty()
+            && self.files_from_raw.is_empty()
+        {
+            return Ok(self.cli_sources.clone());
+        }
+        if self.stdin_command.is_some() || self.cli_sources.iter().any(|s| s == "-") {
+            bail!(
+                "backing up stdin cannot be combined with --files-from, --files-from-verbatim or --files-from-raw"
+            );
+        }
+        let mut sources = super::files_from::collect(
+            &self.files_from,
+            &self.files_from_verbatim,
+            &self.files_from_raw,
+        )?;
+        sources.extend(self.cli_sources.iter().cloned());
+        if sources.is_empty() {
+            bail!("nothing to backup, please specify source files/dirs");
+        }
+        let sources: Vec<String> = sources
+            .into_iter()
+            .filter(|p| match Path::new(p).symlink_metadata() {
+                Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                    warn!("{p} does not exist, skipping");
+                    false
+                }
+                _ => true,
+            })
+            .collect();
+        if sources.is_empty() {
+            bail!("all source directories/files do not exist");
+        }
+        Ok(sources)
+    }
     fn hooks(&self, hooks: &Hooks, action: &str, source: impl Display) -> Hooks {
         let mut hooks_variables =
             HashMap::from([("RUSTIC_ACTION".to_string(), action.to_string())]);

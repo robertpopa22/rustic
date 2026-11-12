@@ -9,6 +9,7 @@ pub(crate) mod copy;
 pub(crate) mod diff;
 pub(crate) mod docs;
 pub(crate) mod dump;
+pub(crate) mod files_from;
 pub(crate) mod find;
 pub(crate) mod forget;
 pub(crate) mod init;
