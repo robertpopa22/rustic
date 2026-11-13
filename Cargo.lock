@@ -5471,7 +5471,7 @@ dependencies = [
  "rhai",
  "rstest",
  "rustic_backend",
- "rustic_core 0.13.0",
+ "rustic_core 0.13.0 (git+https://github.com/rustic-rs/rustic_core)",
  "rustic_testing",
  "scopeguard",
  "self_update",
@@ -5491,6 +5491,7 @@ dependencies = [
 [[package]]
 name = "rustic_backend"
 version = "0.7.0"
+source = "git+https://github.com/rustic-rs/rustic_core#0abb59f949dd4d9fe6a6373e50bdf6e50d0c5988"
 dependencies = [
  "aho-corasick",
  "backon",
@@ -5509,7 +5510,7 @@ dependencies = [
  "rand 0.10.3",
  "rayon",
  "reqwest",
- "rustic_core 0.13.0",
+ "rustic_core 0.13.0 (git+https://github.com/rustic-rs/rustic_core)",
  "semver",
  "serde",
  "strum",
@@ -5525,62 +5526,6 @@ name = "rustic_cdc"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbcebf2228827bc4b61cb54dfd84cf43aacf06ca2dfe4c014b136a0e32b876e2"
-
-[[package]]
-name = "rustic_core"
-version = "0.13.0"
-dependencies = [
- "aes256ctr_poly1305aes",
- "backon",
- "binrw",
- "bytes",
- "bytesize",
- "cached",
- "cachedir",
- "clap",
- "conflate",
- "crossbeam-channel",
- "derive_more",
- "derive_setters",
- "dirs",
- "displaydoc",
- "dunce",
- "ecow",
- "enum-map",
- "enumset",
- "filetime",
- "gethostname",
- "hex",
- "ignore",
- "integer-sqrt",
- "itertools 0.15.0",
- "jiff",
- "lockable",
- "log",
- "nix 0.31.3",
- "pariter",
- "path-dedot",
- "quick_cache",
- "rand 0.10.3",
- "rayon",
- "runtime-format",
- "rustic_cdc",
- "same-file",
- "scrypt 0.12.0",
- "serde",
- "serde-aux",
- "serde_derive",
- "serde_json",
- "serde_with",
- "sha2 0.11.1",
- "shell-words",
- "smallvec",
- "strum",
- "thiserror 2.0.21",
- "walkdir",
- "xattr",
- "zstd 0.14.3",
-]
 
 [[package]]
 name = "rustic_core"
@@ -5634,6 +5579,63 @@ dependencies = [
  "walkdir",
  "xattr",
  "zstd 0.13.4",
+]
+
+[[package]]
+name = "rustic_core"
+version = "0.13.0"
+source = "git+https://github.com/rustic-rs/rustic_core#0abb59f949dd4d9fe6a6373e50bdf6e50d0c5988"
+dependencies = [
+ "aes256ctr_poly1305aes",
+ "backon",
+ "binrw",
+ "bytes",
+ "bytesize",
+ "cached",
+ "cachedir",
+ "clap",
+ "conflate",
+ "crossbeam-channel",
+ "derive_more",
+ "derive_setters",
+ "dirs",
+ "displaydoc",
+ "dunce",
+ "ecow",
+ "enum-map",
+ "enumset",
+ "filetime",
+ "gethostname",
+ "hex",
+ "ignore",
+ "integer-sqrt",
+ "itertools 0.15.0",
+ "jiff",
+ "lockable",
+ "log",
+ "nix 0.31.3",
+ "pariter",
+ "path-dedot",
+ "quick_cache",
+ "rand 0.10.3",
+ "rayon",
+ "runtime-format",
+ "rustic_cdc",
+ "same-file",
+ "scrypt 0.12.0",
+ "serde",
+ "serde-aux",
+ "serde_derive",
+ "serde_json",
+ "serde_with",
+ "sha2 0.11.1",
+ "shell-words",
+ "smallvec",
+ "strum",
+ "thiserror 2.0.21",
+ "walkdir",
+ "xattr",
+ "zstd 0.14.3",
 ]
 
 [[package]]
