@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 
 use crate::{
     Application, RUSTIC_APP,
-    repository::{IndexedRepo, get_global_grouped_snapshots},
+    commands::find_ids::{IdKind, find_ids},
+    repository::{IndexedRepo, get_global_grouped_snapshots, get_snapots_from_ids},
     status_err,
 };
 
@@ -53,6 +54,31 @@ pub(crate) struct FindCmd {
     /// Show uid/gid instead of user/group
     #[clap(long, long("numeric-uid-gid"))]
     numeric_id: bool,
+
+    /// Find where blobs with these ids (full or 8-digit short) are used, like `restic find --blob`.
+    /// Snapshots to search are given as positional ids after `--`.
+    #[clap(long, value_name = "ID", num_args = 1.., conflicts_with_all = ["tree", "pack", "glob", "iglob", "path"])]
+    blob: Vec<String>,
+
+    /// Find where trees with these ids are used, like `restic find --tree`
+    #[clap(long, value_name = "ID", num_args = 1.., conflicts_with_all = ["blob", "pack", "glob", "iglob", "path"])]
+    tree: Vec<String>,
+
+    /// Find where the blobs stored in these packs are used, like `restic find --pack`
+    #[clap(long, value_name = "ID", num_args = 1.., conflicts_with_all = ["blob", "tree", "glob", "iglob", "path"])]
+    pack: Vec<String>,
+
+    /// With --blob, --tree or --pack: also show the pack each object is stored in
+    #[clap(long)]
+    show_pack_id: bool,
+
+    /// With --blob, --tree or --pack: search snapshots from oldest to newest
+    #[clap(long)]
+    reverse: bool,
+
+    /// With --blob, --tree or --pack: output JSON like `restic find --json`
+    #[clap(long)]
+    json: bool,
 }
 
 impl Runnable for FindCmd {
@@ -70,6 +96,15 @@ impl Runnable for FindCmd {
 
 impl FindCmd {
     fn inner_run(&self, repo: IndexedRepo) -> Result<()> {
+        let by_id = [
+            (IdKind::Blob, &self.blob),
+            (IdKind::Tree, &self.tree),
+            (IdKind::Pack, &self.pack),
+        ];
+        if let Some((kind, ids)) = by_id.into_iter().find(|(_, ids)| !ids.is_empty()) {
+            let snapshots = get_snapots_from_ids(&repo, &self.ids)?;
+            return find_ids(&repo, kind, ids, snapshots, self.reverse, self.show_pack_id, self.json);
+        }
         let grouped = get_global_grouped_snapshots(&repo, &self.ids)?;
         for group in grouped.groups {
             let mut snaps = group.items;

@@ -11,6 +11,7 @@ pub(crate) mod docs;
 pub(crate) mod dump;
 pub(crate) mod files_from;
 pub(crate) mod find;
+pub(crate) mod find_ids;
 pub(crate) mod forget;
 pub(crate) mod init;
 pub(crate) mod key;
