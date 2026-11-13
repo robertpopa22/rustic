@@ -18,7 +18,7 @@ proves parity, run against stock restic.
 | 10 | `repair packs`, `recover` | M | corrupt a pack on purpose, both tools repair to a repo that passes `check --read-data` | |
 | 11 | `cache` command (list, `--cleanup`), `--cleanup-cache` | S | | |
 | 12 | `ls --ncdu`, `--sort`, `--reverse`, `--human-readable`; `snapshots --compact`, `--latest N`; `forget --compact` | S | output compared | |
-| 13 | `rewrite --new-host`, `--new-time`, `--snapshot-summary` | S | restic reads the rewritten snapshot identically | |
+| 13 | `rewrite --new-host`, `--new-time`, `--snapshot-summary` | S | restic reads the rewritten snapshot identically | **done in fork**: aliases of `--set-hostname`/`--set-time`, `-s`; summary counts regular files only, like restic ([tests/rewrite.ps1](tests/rewrite.ps1)); not tested: a snapshot with no summary at all |
 | 14 | TLS options: `--cacert`, `--tls-client-cert`, `--insecure-tls`; `--limit-upload/--limit-download` for all backends | M | REST server with own CA | |
 | 15 | Windows: `--use-fs-snapshot` (VSS), `--exclude-cloud-files`, store long path for 8.3 short names | M–L | backup of a locked file; path listing equal | |
 | 16 | restic-compatible CLI spellings as aliases (`--exclude`, `--host`, `--tag`, `--path`, `--target`, `key passwd`, `generate`, `migrate`, `features`, `options`) | M | scripts written for restic run unchanged | needs upstream agreement; may live in a compatibility layer |

@@ -32,11 +32,18 @@ impl UnlockCmd {
         repo_opts.run_open(|repo| {
             let removed = repo.unlock(self.remove_all, dry_run)?;
             for id in &removed {
-                println!("{} lock {id}", if dry_run { "would remove" } else { "removed" });
+                println!(
+                    "{} lock {id}",
+                    if dry_run { "would remove" } else { "removed" }
+                );
             }
             println!(
                 "{} {} locks",
-                if dry_run { "would remove" } else { "successfully removed" },
+                if dry_run {
+                    "would remove"
+                } else {
+                    "successfully removed"
+                },
                 removed.len()
             );
             Ok(())

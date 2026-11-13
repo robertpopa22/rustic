@@ -103,7 +103,15 @@ impl FindCmd {
         ];
         if let Some((kind, ids)) = by_id.into_iter().find(|(_, ids)| !ids.is_empty()) {
             let snapshots = get_snapots_from_ids(&repo, &self.ids)?;
-            return find_ids(&repo, kind, ids, snapshots, self.reverse, self.show_pack_id, self.json);
+            return find_ids(
+                &repo,
+                kind,
+                ids,
+                snapshots,
+                self.reverse,
+                self.show_pack_id,
+                self.json,
+            );
         }
         let grouped = get_global_grouped_snapshots(&repo, &self.ids)?;
         for group in grouped.groups {

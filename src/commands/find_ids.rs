@@ -69,7 +69,14 @@ struct Finder<'a> {
 struct Done;
 
 impl Finder<'_> {
-    fn print(&mut self, tpe: &'static str, id: String, path: &str, parent: String, sn: &SnapshotFile) {
+    fn print(
+        &mut self,
+        tpe: &'static str,
+        id: String,
+        path: &str,
+        parent: String,
+        sn: &SnapshotFile,
+    ) {
         let found = Found {
             object_type: tpe,
             id,
@@ -132,7 +139,13 @@ impl Finder<'_> {
                 for id in node.content.iter().flatten() {
                     let hit = self.blobs.as_mut().is_some_and(|b| b.matches(id));
                     if hit {
-                        self.print("blob", id.to_hex().to_string(), &node_path, tree_id.to_hex().to_string(), sn);
+                        self.print(
+                            "blob",
+                            id.to_hex().to_string(),
+                            &node_path,
+                            tree_id.to_hex().to_string(),
+                            sn,
+                        );
                     }
                 }
             }
@@ -157,7 +170,11 @@ impl Finder<'_> {
             BlobType::Data => self.repo.get_index_entry(&DataId::from(rid)),
             BlobType::Tree => self.repo.get_index_entry(&TreeId::from(rid)),
         };
-        let name = if tpe == BlobType::Data { "data" } else { "tree" };
+        let name = if tpe == BlobType::Data {
+            "data"
+        } else {
+            "tree"
+        };
         match entry {
             Ok(e) => {
                 let pack = e.pack.to_hex().to_string();
@@ -171,7 +188,10 @@ impl Finder<'_> {
                     e.location.uncompressed_length.map_or(0, |l| l.get())
                 );
             }
-            Err(_) => println!("Object {name} with type {} not found in the index", id.get(..8).unwrap_or(id)),
+            Err(_) => println!(
+                "Object {name} with type {} not found in the index",
+                id.get(..8).unwrap_or(id)
+            ),
         }
     }
 }
