@@ -73,8 +73,8 @@ impl RestoreCmd {
 
         let fs = restore_infos.stats.files;
         println!(
-            "Files:  {} to restore, {} unchanged, {} verified, {} to modify, {} additional",
-            fs.restore, fs.unchanged, fs.verified, fs.modify, fs.additional
+            "Files:  {} to restore, {} unchanged, {} verified, {} to modify, {} additional, {} skipped",
+            fs.restore, fs.unchanged, fs.verified, fs.modify, fs.additional, fs.skipped
         );
         let ds = restore_infos.stats.dirs;
         println!(
@@ -99,11 +99,20 @@ impl RestoreCmd {
         if dry_run && config.global.dry_run_warmup {
             repo.warm_up(restore_infos.to_packs().into_iter())?;
         } else if !dry_run && !config.global.dry_run_warmup {
-            // save some memory
-            let repo = repo.drop_data_from_index();
-
-            let ls = repo.ls(&node, &ls_opts)?;
-            repo.restore(restore_infos, &self.opts, ls, &dest)?;
+            let skipped = restore_infos.skipped.clone();
+            if self.opts.verify {
+                // --verify needs the data blobs of the index after the restore
+                let ls = repo.ls(&node, &ls_opts)?;
+                repo.restore(restore_infos, &self.opts, ls, &dest)?;
+                let ls = repo.ls(&node, &ls_opts)?;
+                let verified = repo.verify_restore(ls, &dest, &skipped)?;
+                println!("verified {verified} files");
+            } else {
+                // save some memory
+                let repo = repo.drop_data_from_index();
+                let ls = repo.ls(&node, &ls_opts)?;
+                repo.restore(restore_infos, &self.opts, ls, &dest)?;
+            }
             println!("restore done.");
         } else {
             debug!(
