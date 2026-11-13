@@ -36,6 +36,10 @@ pub(crate) struct RewriteCmd {
     #[clap(flatten, next_help_heading = "Snapshot options")]
     pub modification: SnapshotModification,
 
+    /// create or update the snapshot summary (files and bytes processed), like `restic rewrite -s`
+    #[clap(long, short = 's', help_heading = "Tree rewrite options")]
+    pub snapshot_summary: bool,
+
     /// treat all trees as changed (i.e. serialize all and rebuild summary)
     #[clap(long, help_heading = "Tree rewrite options")]
     pub all_trees: bool,
@@ -51,19 +55,21 @@ impl Runnable for RewriteCmd {
     fn run(&self) {
         let repo = &RUSTIC_APP.config().repository;
 
-        if let Err(err) =
-            if self.excludes.is_empty() && self.node_modification.is_empty() && !self.all_trees {
-                repo.run_open(|repo| {
-                    self.lock(&repo)?;
-                    self.inner_run_open(repo)
-                })
-            } else {
-                repo.run_open(|repo| {
-                    self.lock(&repo)?;
-                    self.inner_run_indexed(repo.to_indexed()?)
-                })
-            }
+        if let Err(err) = if self.excludes.is_empty()
+            && self.node_modification.is_empty()
+            && !self.all_trees
+            && !self.snapshot_summary
         {
+            repo.run_open(|repo| {
+                self.lock(&repo)?;
+                self.inner_run_open(repo)
+            })
+        } else {
+            repo.run_open(|repo| {
+                self.lock(&repo)?;
+                self.inner_run_indexed(repo.to_indexed()?)
+            })
+        } {
             status_err!("{}", err);
             RUSTIC_APP.shutdown(Shutdown::Crash);
         }
