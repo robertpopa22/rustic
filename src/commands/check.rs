@@ -39,6 +39,8 @@ impl Runnable for CheckCmd {
 
 impl CheckCmd {
     fn inner_run(&self, repo: OpenRepo) -> Result<()> {
+        // like restic: check runs under an exclusive lock, so no backup changes the repository
+        repo.lock_exclusive()?;
         let snaps: Vec<SnapshotFile> = get_global_grouped_snapshots(&repo, &self.ids)?.into();
         let trees = snaps.into_iter().map(|snap| snap.tree).collect();
         repo.check_with_trees(self.opts, trees)?.is_ok()?;

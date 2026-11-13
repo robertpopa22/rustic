@@ -208,6 +208,8 @@ impl Runnable for EntryPoint {
             // Wait for Ctrl-C
             rx.recv().expect("Could not receive from channel.");
             info!("Ctrl-C received, shutting down...");
+            // destructors do not run on this path: remove our lock files explicitly
+            rustic_core::repofile::lockfile::remove_held_locks();
             RUSTIC_APP.shutdown(Shutdown::Graceful)
         });
 

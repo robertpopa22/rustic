@@ -34,6 +34,8 @@ impl Runnable for PruneCmd {
 
 impl PruneCmd {
     fn inner_run(&self, repo: OpenRepo) -> Result<()> {
+        // like restic: exclusive before reading what prune plans on
+        repo.lock_exclusive()?;
         let config = RUSTIC_APP.config();
 
         let prune_plan = repo.prune_plan(&self.opts)?;

@@ -62,13 +62,18 @@ $null = Run $Restic ($rs + @('backup', "$Work\src"))
 $null = Run $Restic ($rs + @('backup', "$Work\src"))
 
 # --- A. restic holds a non-exclusive lock (slow backup) ---
+$snapsBefore = 0
 $p = Start-Process $Restic -ArgumentList ($rs + @('backup', '--stdin-filename', 's.txt', '--stdin-from-command', '--', "$Work\slow25.cmd")) -PassThru -WindowStyle Hidden
 Rec 'A0 restic backup holds a lock' (WaitLocks 1)
+$snapsBefore = (Get-ChildItem "$repo\snapshots").Count
 $r = Run $Rustic ($rt + @('snapshots')); Rec 'A1 rustic snapshots runs during restic backup' ($r.Code -eq 0) (Short $r)
 $r = Run $Rustic ($rt + @('backup', "$Work\src")); Rec 'A2 rustic backup runs during restic backup' ($r.Code -eq 0) (Short $r)
 $r = Run $Rustic ($rt + @('--restic-locks', 'backup', "$Work\src")); Rec 'A3 rustic --restic-locks backup runs during restic backup' ($r.Code -eq 0) (Short $r)
 $r = Run $Rustic ($rt + @('forget', '--keep-last', '1')); Rec 'A4 rustic forget refuses during restic backup' ($r.Code -ne 0 -and $r.Out -match 'locked') (Short $r)
 $r = Run $Rustic ($rt + @('--restic-locks', 'prune')); Rec 'A5 rustic --restic-locks prune refuses during restic backup' ($r.Code -ne 0 -and $r.Out -match 'locked') (Short $r)
+$r = Run $Rustic ($rt + @('check')); Rec 'A5b rustic check refuses during restic backup (restic check is exclusive)' ($r.Code -ne 0 -and $r.Out -match 'locked') (Short $r)
+$snapsBefore = (Get-ChildItem "$repo\snapshots").Count
+$r = Run $Rustic ($rt + @('--restic-locks', 'tag', '--add', 'x')); Rec 'A5c rustic tag refuses before writing any snapshot' ($r.Code -ne 0 -and (Get-ChildItem "$repo\snapshots").Count -eq $snapsBefore) (Short $r)
 Rec 'A6 refused rustic left no lock behind' ((Locks).Count -eq 1) "locks: $((Locks).Count)"
 $p.WaitForExit(); Rec 'A7 restic backup finished' ($p.ExitCode -eq 0) "exit $($p.ExitCode)"
 
@@ -106,11 +111,14 @@ $p = Start-Process $Rustic -ArgumentList ($rt + @('--restic-locks', 'prune', '--
 $h = $p.Handle
 # rustic writes a non-exclusive lock when it opens the repository and an exclusive one before
 # it deletes; suspend as soon as the second lock appears, then confirm it is exclusive
-$got = WaitLocks 2 20000
-[void][Nt.P]::NtSuspendProcess($h)
+# step the process: suspend, look, resume briefly, until an exclusive lock is seen
+$null = WaitLocks 1 20000
 $ex = $false
-if ($got) { foreach ($l in Locks) { $r = Run $Restic ($rs + @('cat', 'lock', $l.Name, '--no-lock')); if ($r.Out -match '"exclusive":\s*true') { $ex = $true } } }
-if (-not $ex) { [void][Nt.P]::NtResumeProcess($h) }
+for ($i = 0; $i -lt 400 -and -not $ex -and -not $p.HasExited; $i++) {
+  [void][Nt.P]::NtSuspendProcess($h)
+  foreach ($l in Locks) { $r = Run $Restic ($rs + @('cat', 'lock', $l.Name, '--no-lock')); if ($r.Out -match '"exclusive":\s*true') { $ex = $true } }
+  if (-not $ex) { [void][Nt.P]::NtResumeProcess($h); Start-Sleep -Milliseconds 2 }
+}
 Rec 'D0 rustic --restic-locks prune holds an exclusive lock (suspended)' $ex
 if ($ex) {
   $r = Run $Restic ($rs + @('snapshots')); Rec 'D1 restic snapshots refuses during rustic prune' ($r.Code -ne 0) (Short $r)
@@ -126,6 +134,8 @@ $null = WaitLocks 1
 $p.Kill(); $p.WaitForExit()
 Rec 'E0 killed rustic left its lock' ((Locks).Count -eq 1)
 $r = Run $Restic ($rs + @('prune')); Rec 'E1 restic prune refuses on the left-over rustic lock' ($r.Code -ne 0) (Short $r)
+$r = Run $Rustic ($rt + @('--dry-run', 'unlock', '--remove-all')); Rec 'E1b rustic --dry-run unlock removes nothing' ($r.Code -eq 0 -and (Locks).Count -eq 1 -and $r.Out -match 'would remove 1') (Short $r)
+$r = Run $Rustic ($rt + @('unlock')); Rec 'E1c rustic unlock keeps a fresh lock of a dead process on Windows (age only)' ($r.Code -eq 0 -and (Locks).Count -eq 1) (Short $r)
 $r = Run $Rustic ($rt + @('unlock', '--remove-all')); Rec 'E2 rustic unlock --remove-all removes it' ($r.Code -eq 0 -and (Locks).Count -eq 0) (Short $r)
 $r = Run $Restic ($rs + @('check', '--read-data')); Rec 'E3 restic check --read-data clean at the end' ($r.Code -eq 0) (Short $r)
 $r = Run $Rustic ($rt + @('check', '--read-data')); Rec 'E4 rustic check --read-data clean at the end' ($r.Code -eq 0) (Short $r)

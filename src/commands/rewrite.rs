@@ -53,9 +53,15 @@ impl Runnable for RewriteCmd {
 
         if let Err(err) =
             if self.excludes.is_empty() && self.node_modification.is_empty() && !self.all_trees {
-                repo.run_open(|repo| self.inner_run_open(repo))
+                repo.run_open(|repo| {
+                    self.lock(&repo)?;
+                    self.inner_run_open(repo)
+                })
             } else {
-                repo.run_indexed(|repo| self.inner_run_indexed(repo))
+                repo.run_open(|repo| {
+                    self.lock(&repo)?;
+                    self.inner_run_indexed(repo.to_indexed()?)
+                })
             }
         {
             status_err!("{}", err);
@@ -65,6 +71,15 @@ impl Runnable for RewriteCmd {
 }
 
 impl RewriteCmd {
+    /// like restic: rewrite with forget (and tag) runs under an exclusive lock, before any new
+    /// snapshot is written
+    fn lock(&self, repo: &OpenRepo) -> Result<()> {
+        if self.forget && !RUSTIC_APP.config().global.dry_run {
+            repo.lock_exclusive()?;
+        }
+        Ok(())
+    }
+
     fn opts(&self) -> RewriteOptions {
         let config = RUSTIC_APP.config();
         RewriteOptions::default()

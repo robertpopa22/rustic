@@ -107,6 +107,8 @@ impl ForgetCmd {
     /// see <https://github.com/rustic-rs/rustic/issues/1242>
     fn inner_run(&self, repo: OpenRepo) -> Result<()> {
         let config = RUSTIC_APP.config();
+        // like restic: forget runs under an exclusive lock
+        repo.lock_exclusive()?;
 
         let group_by = config
             .forget

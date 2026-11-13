@@ -67,6 +67,9 @@ impl Runnable for IndexSubCmd {
 impl IndexSubCmd {
     fn inner_run(&self, repo: OpenRepo) -> Result<()> {
         let config = RUSTIC_APP.config();
+        if !config.global.dry_run {
+            repo.lock_exclusive()?;
+        }
         repo.repair_index(&self.opts, config.global.dry_run)?;
         Ok(())
     }
@@ -75,7 +78,12 @@ impl IndexSubCmd {
 impl Runnable for SnapSubCmd {
     fn run(&self) {
         let config = RUSTIC_APP.config();
-        if let Err(err) = config.repository.run_indexed(|repo| self.inner_run(repo)) {
+        if let Err(err) = config.repository.run_open(|repo| {
+            if !config.global.dry_run {
+                repo.lock_exclusive()?;
+            }
+            self.inner_run(repo.to_indexed()?)
+        }) {
             status_err!("{}", err);
             RUSTIC_APP.shutdown(Shutdown::Crash);
         };

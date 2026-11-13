@@ -95,6 +95,10 @@ impl CopyCmd {
             for (level, merge_log) in merge_logs {
                 log!(level, "{merge_log}");
             }
+            // the locking policy applies to the target too, unless its profile sets it
+            target_config.repository.repo.restic_locks |= config.repository.repo.restic_locks;
+            target_config.repository.repo.ignore_restic_locks |=
+                config.repository.repo.ignore_restic_locks;
             let target_opt = &target_config.repository;
             if let Err(err) =
                 target_opt.run(|target_repo| self.copy(&repo, target_repo, target_opt, &snapshots))
