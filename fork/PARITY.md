@@ -41,15 +41,15 @@ docs. Estimated 70 % of the map is verified by running; the rest is marked D or 
 
 | Item | restic | rustic | St |
 |---|---|---|---|
-| Creates lock files in `locks/` | yes, for every operation | never (`rustic_core` has no lock code) | ≠ |
+| Creates lock files in `locks/` | yes, for every operation | upstream: never. **Fork: with `--restic-locks`, like restic** (non-exclusive on open, exclusive for prune/forget/check/repair/rewrite --forget/config, refresh, removal) (R) | **+** opt-in |
 | Honours locks of other clients | yes; `prune` with a backup running exits 11 | upstream: no, `rustic prune` ran while a restic backup held a lock (R). **Fork: prune, forget, key remove, repair index/snapshots and config refuse while restic holds a lock (R)**; `--ignore-restic-locks` overrides | **+** partly |
-| `unlock` | yes | no command (lock-free design) | – |
-| `--no-lock`, `--retry-lock` | yes | n/a | ≠ |
+| `unlock` | yes | **fork: `unlock`, `--remove-all`** (R); stale = age, and dead PID on the same host on Unix only | **+** |
+| `--no-lock`, `--retry-lock` | yes | fork: `--ignore-restic-locks` ≈ `--no-lock`; no `--retry-lock` | ~ |
 | Two-phase prune (safe concurrent prune) | no | yes | + rustic |
 
-Still open in the fork: rustic writes no lock, so restic cannot see rustic, and a rustic
-backup can run while `restic prune` holds an exclusive lock (see
-[reviews/parity-restic-locks.md](reviews/parity-restic-locks.md)).
+Closed in the fork: rustic refuses to open while restic holds an exclusive lock, and with
+`--restic-locks` it writes locks restic honours ([reviews/parity-restic-locks-write.md](reviews/parity-restic-locks-write.md),
+[tests/locks.ps1](tests/locks.ps1)). Open: `--retry-lock`; locking is opt-in.
 
 Consequence upstream: mixing the two tools on one repository is safe for reads and for
 sequential use (section 1), but **a rustic prune can run while restic writes**. restic
@@ -62,7 +62,7 @@ restic locks and refuse (or wait) before exclusive operations, and ideally write
 |---|---|---|---|---|
 | backup | backup | ~ | H, R | missing flags below |
 | cache | – | – | H | rustic keeps a cache but has no command to list or clean it |
-| cat | cat | ~ | C | restic: config, index, snapshot, key, masterkey, lock, pack, blob, tree; rustic: tree-blob, data-blob, index, snapshot, tree, config? — key/masterkey/lock/pack missing |
+| cat | cat | **+** | R | fork adds `key`, `lock`, `pack`, `blob`: same content as restic ([tests/cat.ps1](tests/cat.ps1)); rustic also accepts id prefixes for keys |
 | check | check | = | H, R | restic `--with-cache` ≈ rustic `--trust-cache` (inverse default) |
 | copy | copy | ≠ | H, R | rustic takes target repos (profiles) via `--target`; restic takes the *source* via `--from-*` |
 | diff | diff | ~ | H | rustic lacks `--metadata`-style output parity check; has diff against local dir |

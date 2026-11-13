@@ -46,16 +46,17 @@ $g = @('-r', $repo, '--no-cache')
 $null = Text $Restic ($g + 'init')
 $null = Text $Restic ($g + @('backup', "$Work\src"))
 
-$key = (Text $Restic ($g + @('list', 'keys')) -split "`n" | Where-Object { $_ -match '^[0-9a-f]{64}' } | Select-Object -First 1).Trim()
-$pack = (Text $Restic ($g + @('list', 'packs')) -split "`n" | Where-Object { $_ -match '^[0-9a-f]{64}' } | Select-Object -First 1).Trim()
-$blobs = Text $Restic ($g + @('list', 'blobs')) -split "`n" | Where-Object { $_ -match '^(data|tree) [0-9a-f]{64}' }
+$key = @(& $Restic @($g + @('list', 'keys')))[0].Trim()
+$pack = @(& $Restic @($g + @('list', 'packs')))[0].Trim()
+$blobs = @(& $Restic @($g + @('list', 'blobs'))) | ForEach-Object { $_.Trim() }
 $data = ($blobs | Where-Object { $_ -like 'data *' } | Select-Object -First 1).Split(' ')[1].Trim()
 $tree = ($blobs | Where-Object { $_ -like 'tree *' } | Select-Object -First 1).Split(' ')[1].Trim()
 
 Rec 'config' (SameJson (Text $Restic ($g + @('cat', 'config'))) (Text $Rustic ($g + @('cat', 'config'))))
 Rec 'masterkey' (SameJson (Text $Restic ($g + @('cat', 'masterkey'))) (Text $Rustic ($g + @('cat', 'masterkey'))))
 Rec 'key' (SameJson (Text $Restic ($g + @('cat', 'key', $key))) (Text $Rustic ($g + @('cat', 'key', $key))))
-Rec 'key by prefix' (SameJson (Text $Restic ($g + @('cat', 'key', $key.Substring(0, 8)))) (Text $Rustic ($g + @('cat', 'key', $key.Substring(0, 8)))))
+# restic needs the full key id; rustic also accepts a prefix (superset)
+Rec 'key by prefix (rustic only)' (SameJson (Text $Restic ($g + @('cat', 'key', $key))) (Text $Rustic ($g + @('cat', 'key', $key.Substring(0, 8)))))
 
 # a lock held by restic: suspend a prune right after it wrote its lock
 Add-Type -Namespace Nt -Name P -MemberDefinition '[DllImport("ntdll.dll")] public static extern int NtSuspendProcess(IntPtr h); [DllImport("ntdll.dll")] public static extern int NtResumeProcess(IntPtr h);'
@@ -68,7 +69,7 @@ Rec 'lock' (SameJson (Text $Restic ($g + @('cat', 'lock', $lock, '--no-lock'))) 
 [void][Nt.P]::NtResumeProcess($h); $p.WaitForExit()
 
 $a = Bytes $Restic ($g + @('cat', 'pack', $pack)) "$Work\p1"; $b = Bytes $Rustic ($g + @('cat', 'pack', $pack)) "$Work\p2"
-Rec 'pack (bytes)' ($a -eq $b -and $a -eq (Get-FileHash (Get-ChildItem -Recurse "$repo\data" -Filter $pack).FullName).Hash)
+Rec 'pack (bytes)' ($a -eq $b -and $a -eq (Get-FileHash (Get-ChildItem -Recurse -File "$repo\data" | Where-Object Name -EQ $pack).FullName).Hash)
 $a = Bytes $Restic ($g + @('cat', 'blob', $data)) "$Work\b1"; $b = Bytes $Rustic ($g + @('cat', 'blob', $data)) "$Work\b2"
 Rec 'data blob (bytes)' ($a -eq $b) "$($a.Substring(0,8)) $($b.Substring(0,8))"
 $a = Bytes $Restic ($g + @('cat', 'blob', $tree)) "$Work\t1"; $b = Bytes $Rustic ($g + @('cat', 'blob', $tree)) "$Work\t2"

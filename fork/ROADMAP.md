@@ -8,13 +8,13 @@ proves parity, run against stock restic.
 |---|---|---|---|---|
 | 1 | `--exclude-caches`, `--exclude-if-present FILE:HEADER`, keep tagged dir and tag file | S | same tree, same snapshot listing from both tools; both `check --read-data` | **done in fork** (`rustic_core` `parity/exclude-caches`), reviewed by Gemini + Grok |
 | 2 | Read restic lock files; refuse exclusive operations (prune, forget --prune, repair) while a non-stale restic lock exists; `--no-lock` to override | M | start `restic backup` holding a lock, run `rustic prune`: must refuse like `restic prune` (exit 11) | **done in fork for all exclusive operations** (`rustic_core` `parity/restic-locks`), reviewed by Codex + Gemini; open: strict lock listing, REST 404, hot/cold |
-| 3 | Write restic-compatible lock files (opt-in), and `unlock`; also check for an exclusive restic lock before backup | M | `rustic backup` running → `restic prune` refuses; `restic prune` running → `rustic backup` refuses | next: closes the TOCTOU found in review |
+| 3 | Write restic-compatible lock files (opt-in), and `unlock`; also check for an exclusive restic lock before backup | M | `rustic backup` running → `restic prune` refuses; `restic prune` running → `rustic backup` refuses | **done in fork** (`--restic-locks`, `unlock`), reviewed by Codex + Gemini, 39 checks equal to restic ([review](reviews/parity-restic-locks-write.md)); open: `--retry-lock`, on by default (upstream decision) |
 | 4 | Public low-level write API (packer, indexer, encrypted backend, global index) behind an unstable feature | M | raw-written snapshot listed, restored, checked and pruned by restic | [DESIGN-lowlevel-write-api.md](DESIGN-lowlevel-write-api.md) |
 | 5 | SFTP backend on Windows (opendal sftp is Unix-only; restic calls `ssh`) | M–L | init/backup/check against an SFTP server from Windows | research: opendal upstream vs external `ssh` like restic |
 | 6 | `--files-from`, `--files-from-raw`, `--files-from-verbatim` | S→M | same input list → same snapshot listing | **done in fork** (`rustic` `parity/files-from`), Go glob ported, 11 cases equal to restic; open: exit code 3 (upstream PR #1908) |
 | 7 | `restore --overwrite always|if-changed|if-newer|never`, `restore --verify` | M | restore over a modified tree, compare result with restic's | |
 | 8 | `stats --mode restore-size|files-by-contents|raw-data|blobs-per-file` with restic's JSON shape | M | `--json` output equal on the same repo | |
-| 9 | `cat key|masterkey|lock|pack|blob`, `find --blob/--tree/--pack` | S | byte-equal output on the same repo | |
+| 9 | `cat key|masterkey|lock|pack|blob`, `find --blob/--tree/--pack` | S | byte-equal output on the same repo | `cat` **done in fork** (pack and blob byte-equal, JSON equal; [tests/cat.ps1](tests/cat.ps1)); `find` open |
 | 10 | `repair packs`, `recover` | M | corrupt a pack on purpose, both tools repair to a repo that passes `check --read-data` | |
 | 11 | `cache` command (list, `--cleanup`), `--cleanup-cache` | S | | |
 | 12 | `ls --ncdu`, `--sort`, `--reverse`, `--human-readable`; `snapshots --compact`, `--latest N`; `forget --compact` | S | output compared | |
