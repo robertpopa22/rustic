@@ -2,6 +2,8 @@
 
 use crate::{Application, RUSTIC_APP, status_err};
 
+use std::io::Write;
+
 use abscissa_core::{Command, Runnable, Shutdown};
 
 use anyhow::Result;
@@ -34,6 +36,14 @@ enum CatSubCmd {
     Tree(TreeOpts),
     /// Display the masterkey
     Masterkey,
+    /// Display a key file (as stored, plain JSON)
+    Key(IdOpt),
+    /// Display a lock file
+    Lock(IdOpt),
+    /// Write a pack file to stdout (raw bytes)
+    Pack(IdOpt),
+    /// Write a blob (data or tree) to stdout
+    Blob(IdOpt),
 }
 
 #[derive(Default, clap::Parser, Debug)]
@@ -83,6 +93,26 @@ impl CatCmd {
             CatSubCmd::Masterkey => config
                 .repository
                 .run_open(|repo| Ok(serde_json::to_vec(&repo.key())?.into()))?,
+            CatSubCmd::Key(opt) => config
+                .repository
+                .run_open(|repo| Ok(repo.cat_file_raw(FileType::Key, &opt.id)?))?,
+            CatSubCmd::Lock(opt) => config
+                .repository
+                .run_open(|repo| Ok(repo.cat_file(FileType::Lock, &opt.id)?))?,
+            CatSubCmd::Pack(opt) => {
+                let data = config
+                    .repository
+                    .run_open(|repo| Ok(repo.cat_file_raw(FileType::Pack, &opt.id)?))?;
+                std::io::stdout().write_all(&data)?;
+                return Ok(());
+            }
+            CatSubCmd::Blob(opt) => {
+                let data = config
+                    .repository
+                    .run_indexed(|repo| Ok(repo.cat_blob_any(&opt.id)?))?;
+                std::io::stdout().write_all(&data)?;
+                return Ok(());
+            }
         };
         println!("{}", String::from_utf8(data.to_vec())?);
 
