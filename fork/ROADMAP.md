@@ -14,7 +14,7 @@ proves parity, run against stock restic.
 | 6 | `--files-from`, `--files-from-raw`, `--files-from-verbatim` | S→M | same input list → same snapshot listing | **done in fork** (`rustic` `parity/files-from`), Go glob ported, 11 cases equal to restic; open: exit code 3 (upstream PR #1908) |
 | 7 | `restore --overwrite always|if-changed|if-newer|never`, `restore --verify` | M | restore over a modified tree, compare result with restic's | |
 | 8 | `stats --mode restore-size|files-by-contents|raw-data|blobs-per-file` with restic's JSON shape | M | `--json` output equal on the same repo | |
-| 9 | `cat key|masterkey|lock|pack|blob`, `find --blob/--tree/--pack` | S | byte-equal output on the same repo | `cat` **done in fork** (pack and blob byte-equal, JSON equal; [tests/cat.ps1](tests/cat.ps1)); `find` open |
+| 9 | `cat key|masterkey|lock|pack|blob`, `find --blob/--tree/--pack` | S | byte-equal output on the same repo | **done in fork**: `cat` (pack and blob byte-equal, JSON equal; [tests/cat.ps1](tests/cat.ps1)), `find --blob/--tree/--pack/--show-pack-id/--reverse/--json` (text and JSON equal; [tests/find.ps1](tests/find.ps1)) |
 | 10 | `repair packs`, `recover` | M | corrupt a pack on purpose, both tools repair to a repo that passes `check --read-data` | |
 | 11 | `cache` command (list, `--cleanup`), `--cleanup-cache` | S | | |
 | 12 | `ls --ncdu`, `--sort`, `--reverse`, `--human-readable`; `snapshots --compact`, `--latest N`; `forget --compact` | S | output compared | |

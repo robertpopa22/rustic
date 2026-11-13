@@ -68,7 +68,7 @@ restic locks and refuse (or wait) before exclusive operations, and ideally write
 | diff | diff | ~ | H | rustic lacks `--metadata`-style output parity check; has diff against local dir |
 | dump | dump | = | H, R | restic `--target` = rustic `--file`; path syntax differs (`snap:path` vs `snap path`) |
 | features | – | – | H | no feature flags in rustic |
-| find | find | ~ | H | missing `--blob`, `--tree`, `--pack`, `--show-pack-id`, `--oldest/--newest`, `--long`, `--ignore-case`, `--reverse` |
+| find | find | ~ | H, R | **fork adds** `--blob`, `--tree`, `--pack`, `--show-pack-id`, `--reverse`, `--json` (equal to restic, [tests/find.ps1](tests/find.ps1)); missing `--oldest/--newest`, `--long`, `--ignore-case` |
 | forget | forget | ~ | H | missing `--compact`, `--unsafe-allow-remove-all` (= `--keep-none`), `--repack-smaller-than` |
 | generate | completions | ~ | H | completions yes; man pages no |
 | init | init | ~ | H | `--from-repo` / `--copy-chunker-params` → rustic `copy --init`; `--repository-version` → `--set-version` |
