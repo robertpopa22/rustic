@@ -30,6 +30,7 @@ pub(crate) mod snapshots;
 pub(crate) mod tag;
 #[cfg(feature = "tui")]
 pub(crate) mod tui;
+pub(crate) mod unlock;
 pub(crate) mod version;
 #[cfg(feature = "webdav")]
 pub(crate) mod webdav;
@@ -50,7 +51,7 @@ use crate::{
         forget::ForgetCmd, init::InitCmd, key::KeyCmd, list::ListCmd, ls::LsCmd, merge::MergeCmd,
         prune::PruneCmd, repair::RepairCmd, repoinfo::RepoInfoCmd, restore::RestoreCmd,
         rewrite::RewriteCmd, self_update::SelfUpdateCmd, show_config::ShowConfigCmd,
-        snapshots::SnapshotCmd, tag::TagCmd,
+        snapshots::SnapshotCmd, tag::TagCmd, unlock::UnlockCmd,
     },
     config::RusticConfig,
 };
@@ -153,6 +154,9 @@ enum RusticCmd {
 
     /// Change tags of snapshots
     Tag(Box<TagCmd>),
+
+    /// Remove stale lock files (written by restic, or by rustic with --restic-locks)
+    Unlock(Box<UnlockCmd>),
 
     /// Start a webdav server which allows to access the repository
     #[cfg(feature = "webdav")]
