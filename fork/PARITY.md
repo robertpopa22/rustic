@@ -82,7 +82,7 @@ restic locks and refuse (or wait) before exclusive operations, and ideally write
 | repair index | repair index | = | H | `--read-all-packs` = `--read-all` |
 | repair packs | – | – | H, C | |
 | repair snapshots | repair snapshots | ~ | H | restic `--forget` ≈ rustic `--delete` |
-| restore | restore | ~ | H | missing `--overwrite` (if-newer, never), `--verify`, `--include-xattr/--exclude-xattr`; include/exclude via `--glob` |
+| restore | restore | ~ | H, R | **fork adds** `--overwrite always|if-changed|if-newer|never` and `--verify` (equal to restic); default stays `if-changed` (restic: `always`); missing `--include-xattr/--exclude-xattr`; include/exclude via `--glob` |
 | rewrite | rewrite | ~ | H | missing `--new-host`, `--new-time`, `--snapshot-summary` |
 | self-update | self-update (feature) | = | D | |
 | snapshots | snapshots | ~ | H | missing `--compact`, `--latest N` |
